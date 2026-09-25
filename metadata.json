@@ -1,0 +1,6 @@
+{
+  "name": "Smart Shop Assistant - Retail Security Dashboard",
+  "description": "Modern responsive Retail Security Dashboard interface with simulated live video feed, real-time bounding box scanner, dynamic alerts feed, and analytics.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
