@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Shield, Radio, Bell, RefreshCw } from 'lucide-react';
+import { Shield, Camera, RefreshCw } from 'lucide-react';
 import { TabType } from '../types';
 
 interface HeaderProps {
@@ -7,6 +7,7 @@ interface HeaderProps {
   onTabChange: (tab: TabType) => void;
   isMonitorActive: boolean;
   anomalyCount: number;
+  totalPhotosCount: number;
   onSimulateThreat: () => void;
 }
 
@@ -15,6 +16,7 @@ export function Header({
   onTabChange,
   isMonitorActive,
   anomalyCount,
+  totalPhotosCount,
   onSimulateThreat,
 }: HeaderProps) {
   const [timeString, setTimeString] = useState('');
@@ -37,73 +39,102 @@ export function Header({
   }, []);
 
   return (
-    <header className="flex items-center justify-between px-6 py-3.5 border-b border-slate-800 bg-[#0d131f] shrink-0">
-      {/* Zone 1: Single text element Brand Zone */}
+    <header className="h-14 px-6 border-b border-slate-200 bg-white flex items-center justify-between shrink-0 select-none shadow-xs">
+      {/* Brand */}
       <div className="flex items-center gap-3">
-        <div className="w-8 h-8 rounded bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
-          <Shield className="w-4 h-4" />
+        <div className="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-600 shadow-xs">
+          <Shield className="w-4 h-4 text-cyan-600" />
         </div>
-        <span className="text-base font-bold tracking-tight text-white">
-          Smart Shop Assistant
-        </span>
+        <div className="flex items-baseline gap-2">
+          <span className="text-sm font-bold text-slate-900 tracking-tight">
+            Smart Shop Assistant
+          </span>
+          <span className="text-xs text-slate-500 font-medium hidden sm:inline">
+            // Vision Security Console
+          </span>
+        </div>
       </div>
 
-      {/* Zone 2: Clean 4-6 text navigation links */}
-      <nav className="hidden md:flex items-center gap-8 text-xs font-medium text-slate-400">
+      {/* Clean Light Navigation Links */}
+      <nav className="hidden md:flex items-center gap-1 bg-slate-100 p-1 rounded-lg border border-slate-200 text-xs">
         <button
           onClick={() => onTabChange('live')}
-          className={`transition-colors hover:text-white ${
-            currentTab === 'live' ? 'text-cyan-400 font-semibold' : ''
+          className={`px-3 py-1.5 rounded-md font-medium transition-all ${
+            currentTab === 'live'
+              ? 'bg-white text-slate-900 shadow-xs font-semibold'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
           }`}
         >
           Live Feed
         </button>
         <button
-          onClick={() => onTabChange('history')}
-          className={`transition-colors hover:text-white ${
-            currentTab === 'history' ? 'text-cyan-400 font-semibold' : ''
+          onClick={() => onTabChange('photos')}
+          className={`px-3 py-1.5 rounded-md font-medium transition-all flex items-center gap-1.5 ${
+            currentTab === 'photos'
+              ? 'bg-white text-slate-900 shadow-xs font-semibold'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
           }`}
         >
-          Detections History
+          <Camera className="w-3.5 h-3.5 text-cyan-600" />
+          <span>Photos</span>
+          {totalPhotosCount > 0 && (
+            <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-cyan-100 text-cyan-800 font-semibold">
+              {totalPhotosCount}
+            </span>
+          )}
+        </button>
+        <button
+          onClick={() => onTabChange('history')}
+          className={`px-3 py-1.5 rounded-md font-medium transition-all ${
+            currentTab === 'history'
+              ? 'bg-white text-slate-900 shadow-xs font-semibold'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+          }`}
+        >
+          History
         </button>
         <button
           onClick={() => onTabChange('analytics')}
-          className={`transition-colors hover:text-white ${
-            currentTab === 'analytics' ? 'text-cyan-400 font-semibold' : ''
+          className={`px-3 py-1.5 rounded-md font-medium transition-all ${
+            currentTab === 'analytics'
+              ? 'bg-white text-slate-900 shadow-xs font-semibold'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
           }`}
         >
           Analytics
         </button>
         <button
           onClick={() => onTabChange('settings')}
-          className={`transition-colors hover:text-white ${
-            currentTab === 'settings' ? 'text-cyan-400 font-semibold' : ''
+          className={`px-3 py-1.5 rounded-md font-medium transition-all ${
+            currentTab === 'settings'
+              ? 'bg-white text-slate-900 shadow-xs font-semibold'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
           }`}
         >
-          System Settings
+          Settings
         </button>
       </nav>
 
-      {/* Zone 3: 1-2 primary actions / live telemetry */}
+      {/* Right Telemetry & Actions */}
       <div className="flex items-center gap-3">
-        <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded bg-slate-900 border border-slate-800 text-xs font-mono text-slate-300">
+        <div className="flex items-center gap-2 px-2.5 py-1 rounded-md bg-slate-50 border border-slate-200 text-xs font-mono text-slate-700 shadow-xs">
           <span
             className={`w-2 h-2 rounded-full ${
-              isMonitorActive
-                ? 'bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]'
-                : 'bg-amber-500'
+              isMonitorActive ? 'bg-emerald-500 animate-pulse' : 'bg-amber-400'
             }`}
           />
-          <span className="tabular-nums tracking-wider">{timeString || '10:42:00'}</span>
+          <span className="tabular-nums tracking-wider text-[11px] font-semibold">
+            {timeString || '10:42:00'}
+          </span>
         </div>
 
         <button
           onClick={onSimulateThreat}
-          title="Trigger a simulated anomaly detection event"
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-200 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded transition-colors whitespace-nowrap"
+          title="Simulate security event"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-md transition-colors whitespace-nowrap shadow-xs"
         >
-          <RefreshCw className="w-3.5 h-3.5 text-amber-400" />
-          <span>Simulate Event</span>
+          <RefreshCw className="w-3.5 h-3.5 text-slate-600" />
+          <span className="hidden sm:inline">Simulate Event</span>
         </button>
       </div>
     </header>

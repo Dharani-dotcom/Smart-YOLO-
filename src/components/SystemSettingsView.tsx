@@ -21,23 +21,23 @@ export function SystemSettingsView({
   };
 
   return (
-    <div className="flex-1 p-6 overflow-y-auto space-y-6 max-w-4xl">
+    <div className="flex-1 p-6 overflow-y-auto space-y-6 max-w-4xl bg-slate-50/80">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between p-4 rounded-xl bg-white border border-slate-200 shadow-xs">
         <div>
-          <h1 className="text-xl font-bold text-white tracking-tight">System Settings & Hardware Config</h1>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <h1 className="text-xl font-bold text-slate-900 tracking-tight">System Settings & Hardware Config</h1>
+          <p className="text-xs text-slate-500 mt-1">
             Surveillance AI hyperparameters, biometric thresholds, and storage quotas
           </p>
         </div>
 
         <button
           onClick={handleSave}
-          className="flex items-center gap-1.5 px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-semibold text-xs rounded transition-colors"
+          className="flex items-center gap-1.5 px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white font-bold text-xs rounded-lg transition-colors shadow-xs"
         >
           {savedSuccess ? (
             <>
-              <Check className="w-3.5 h-3.5 text-slate-950" />
+              <Check className="w-3.5 h-3.5 text-white" />
               <span>Saved Successfully</span>
             </>
           ) : (
@@ -50,26 +50,26 @@ export function SystemSettingsView({
       </div>
 
       {savedSuccess && (
-        <div className="p-3 bg-emerald-950/40 border border-emerald-700/60 rounded text-xs text-emerald-300 flex items-center gap-2">
-          <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+        <div className="p-3 bg-emerald-50 border border-emerald-300 rounded-xl text-xs text-emerald-800 flex items-center gap-2 font-medium shadow-xs">
+          <Check className="w-4 h-4 text-emerald-600 shrink-0" />
           <span>Security parameters successfully committed to edge gateway controllers.</span>
         </div>
       )}
 
       {/* Group 1: AI Detection & Vision Engine */}
-      <div className="p-5 rounded-lg bg-[#0d131f] border border-slate-800 space-y-4">
-        <div className="flex items-center gap-2 pb-2 border-b border-slate-800">
-          <Sliders className="w-4 h-4 text-cyan-400" />
-          <h2 className="text-sm font-semibold text-white">Neural Detection Parameters</h2>
+      <div className="p-5 rounded-xl bg-white border border-slate-200 space-y-4 shadow-xs">
+        <div className="flex items-center gap-2 pb-2 border-b border-slate-200">
+          <Sliders className="w-4 h-4 text-cyan-600" />
+          <h2 className="text-sm font-bold text-slate-900">Neural Detection Parameters</h2>
         </div>
 
         {/* AI Confidence Threshold */}
         <div className="space-y-2">
           <div className="flex justify-between items-center text-xs">
-            <label className="text-slate-300 font-medium">
+            <label className="text-slate-700 font-semibold">
               Biometric Match Confidence Threshold
             </label>
-            <span className="font-mono text-cyan-400 font-semibold">
+            <span className="font-mono text-cyan-800 font-bold bg-cyan-50 px-2 py-0.5 rounded border border-cyan-200">
               {localSettings.aiConfidenceThreshold}%
             </span>
           </div>
@@ -81,7 +81,7 @@ export function SystemSettingsView({
             onChange={(e) =>
               setLocalSettings({ ...localSettings, aiConfidenceThreshold: Number(e.target.value) })
             }
-            className="w-full accent-cyan-500 bg-slate-800 rounded h-1.5 cursor-pointer"
+            className="w-full accent-cyan-600 bg-slate-200 rounded h-2 cursor-pointer"
           />
           <p className="text-[11px] text-slate-500">
             Detections below this match probability will be classified as anonymous visitors.
@@ -89,9 +89,9 @@ export function SystemSettingsView({
         </div>
 
         {/* Facial Recognition Toggle */}
-        <div className="flex items-center justify-between pt-2">
+        <div className="flex items-center justify-between pt-2 border-t border-slate-100">
           <div>
-            <div className="text-xs font-medium text-slate-200">Facial Recognition Vector Extraction</div>
+            <div className="text-xs font-bold text-slate-900">Facial Recognition Vector Extraction</div>
             <div className="text-[11px] text-slate-500">
               Matches customer faces against VIP register and known loss-prevention profiles
             </div>
@@ -104,23 +104,23 @@ export function SystemSettingsView({
               })
             }
             className={`w-11 h-6 rounded-full transition-colors relative ${
-              localSettings.facialRecognitionActive ? 'bg-cyan-500' : 'bg-slate-800'
+              localSettings.facialRecognitionActive ? 'bg-cyan-600' : 'bg-slate-300'
             }`}
           >
             <div
-              className={`w-4 h-4 rounded-full bg-white transition-transform absolute top-1 ${
+              className={`w-4 h-4 rounded-full bg-white absolute top-1 transition-transform ${
                 localSettings.facialRecognitionActive ? 'right-1' : 'left-1'
               }`}
             />
           </button>
         </div>
 
-        {/* Loitering Alert Threshold */}
-        <div className="flex items-center justify-between pt-2">
+        {/* Auto Flag Loitering Toggle */}
+        <div className="flex items-center justify-between pt-2 border-t border-slate-100">
           <div>
-            <div className="text-xs font-medium text-slate-200">Auto-Flag Loitering & Extended Dwell</div>
+            <div className="text-xs font-bold text-slate-900">Auto-Flag Extended Dwell / Loitering</div>
             <div className="text-[11px] text-slate-500">
-              Dispatches floor associate prompt when stationary in high-theft aisles
+              Automatically triggers associate alert when face square remains stationary for threshold duration
             </div>
           </div>
           <button
@@ -131,52 +131,30 @@ export function SystemSettingsView({
               })
             }
             className={`w-11 h-6 rounded-full transition-colors relative ${
-              localSettings.autoFlagLoitering ? 'bg-cyan-500' : 'bg-slate-800'
+              localSettings.autoFlagLoitering ? 'bg-cyan-600' : 'bg-slate-300'
             }`}
           >
             <div
-              className={`w-4 h-4 rounded-full bg-white transition-transform absolute top-1 ${
+              className={`w-4 h-4 rounded-full bg-white absolute top-1 transition-transform ${
                 localSettings.autoFlagLoitering ? 'right-1' : 'left-1'
               }`}
             />
           </button>
         </div>
-
-        {localSettings.autoFlagLoitering && (
-          <div className="pt-2">
-            <label className="text-xs text-slate-300 block mb-1">
-              Loitering Trigger Duration: {localSettings.loiteringThresholdSeconds} seconds
-            </label>
-            <input
-              type="range"
-              min="60"
-              max="360"
-              step="30"
-              value={localSettings.loiteringThresholdSeconds}
-              onChange={(e) =>
-                setLocalSettings({
-                  ...localSettings,
-                  loiteringThresholdSeconds: Number(e.target.value),
-                })
-              }
-              className="w-full accent-cyan-500 bg-slate-800 rounded h-1.5 cursor-pointer"
-            />
-          </div>
-        )}
       </div>
 
-      {/* Group 2: Audio & Notification Alerts */}
-      <div className="p-5 rounded-lg bg-[#0d131f] border border-slate-800 space-y-4">
-        <div className="flex items-center gap-2 pb-2 border-b border-slate-800">
-          <Bell className="w-4 h-4 text-cyan-400" />
-          <h2 className="text-sm font-semibold text-white">Audio & Incident Dispatch</h2>
+      {/* Group 2: Audio & Alert Notifications */}
+      <div className="p-5 rounded-xl bg-white border border-slate-200 space-y-4 shadow-xs">
+        <div className="flex items-center gap-2 pb-2 border-b border-slate-200">
+          <Bell className="w-4 h-4 text-cyan-600" />
+          <h2 className="text-sm font-bold text-slate-900">Audio Telemetry & Notifications</h2>
         </div>
 
         <div className="flex items-center justify-between">
           <div>
-            <div className="text-xs font-medium text-slate-200">Acoustic Alert Chimes</div>
+            <div className="text-xs font-bold text-slate-900">Audible Surveillance Alert Chime</div>
             <div className="text-[11px] text-slate-500">
-              Plays acoustic synthesized chimes on anomaly triggers and VIP identifications
+              Plays acoustic frequency tone when priority warning or threat event occurs
             </div>
           </div>
           <button
@@ -187,11 +165,11 @@ export function SystemSettingsView({
               })
             }
             className={`w-11 h-6 rounded-full transition-colors relative ${
-              localSettings.alertSoundEnabled ? 'bg-cyan-500' : 'bg-slate-800'
+              localSettings.alertSoundEnabled ? 'bg-cyan-600' : 'bg-slate-300'
             }`}
           >
             <div
-              className={`w-4 h-4 rounded-full bg-white transition-transform absolute top-1 ${
+              className={`w-4 h-4 rounded-full bg-white absolute top-1 transition-transform ${
                 localSettings.alertSoundEnabled ? 'right-1' : 'left-1'
               }`}
             />
@@ -199,64 +177,45 @@ export function SystemSettingsView({
         </div>
       </div>
 
-      {/* Group 3: Video Stream & Hardware */}
-      <div className="p-5 rounded-lg bg-[#0d131f] border border-slate-800 space-y-4">
-        <div className="flex items-center gap-2 pb-2 border-b border-slate-800">
-          <Video className="w-4 h-4 text-cyan-400" />
-          <h2 className="text-sm font-semibold text-white">RTSP Video Encoding & Storage</h2>
+      {/* Group 3: Video Streaming & Hardware */}
+      <div className="p-5 rounded-xl bg-white border border-slate-200 space-y-4 shadow-xs">
+        <div className="flex items-center gap-2 pb-2 border-b border-slate-200">
+          <Video className="w-4 h-4 text-cyan-600" />
+          <h2 className="text-sm font-bold text-slate-900">Camera Resolution & Compression</h2>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-slate-300">Recording Quality</label>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+          <div>
+            <label className="text-slate-700 font-semibold block mb-1.5">Stream Quality</label>
             <select
               value={localSettings.recordingResolution}
               onChange={(e) =>
-                setLocalSettings({ ...localSettings, recordingResolution: e.target.value })
+                setLocalSettings({ ...localSettings, recordingResolution: e.target.value as any })
               }
-              className="w-full p-2 bg-slate-900 border border-slate-700 rounded text-xs text-white focus:outline-none focus:border-cyan-500"
+              className="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-800 font-medium focus:outline-none focus:border-cyan-500"
             >
-              <option value="1080p Full HD (60 FPS)">1080p Full HD (60 FPS)</option>
-              <option value="1440p Quad HD (30 FPS)">1440p Quad HD (30 FPS)</option>
-              <option value="4K Ultra HD (30 FPS)">4K Ultra HD (30 FPS)</option>
+              <option value="1080p">1080p Full HD (Recommended)</option>
+              <option value="1440p">1440p 2K Ultra HD</option>
+              <option value="4K">4K UHD High Density</option>
+              <option value="720p">720p Low Bandwidth</option>
             </select>
           </div>
 
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-slate-300">Stream Optimization</label>
+          <div>
+            <label className="text-slate-700 font-semibold block mb-1.5">Storage Retention Period</label>
             <select
-              value={localSettings.streamOptimization}
+              value={localSettings.retentionDays}
               onChange={(e) =>
-                setLocalSettings({
-                  ...localSettings,
-                  streamOptimization: e.target.value as 'ultra-low-latency' | 'balanced' | 'high-definition',
-                })
+                setLocalSettings({ ...localSettings, retentionDays: Number(e.target.value) })
               }
-              className="w-full p-2 bg-slate-900 border border-slate-700 rounded text-xs text-white focus:outline-none focus:border-cyan-500"
+              className="w-full bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-800 font-medium focus:outline-none focus:border-cyan-500"
             >
-              <option value="ultra-low-latency">Ultra-Low Latency (Real-time tracking)</option>
-              <option value="balanced">Balanced (Optimal bandwidth)</option>
-              <option value="high-definition">High Definition (Forensic clarity)</option>
+              <option value={7}>7 Days (GDPR Compliance)</option>
+              <option value={14}>14 Days</option>
+              <option value={30}>30 Days (Standard Audit)</option>
+              <option value={90}>90 Days (Enterprise)</option>
             </select>
           </div>
-        </div>
-
-        <div className="space-y-1.5 pt-2">
-          <div className="flex justify-between items-center text-xs">
-            <label className="text-slate-300 font-medium">Audit Log Retention Policy</label>
-            <span className="font-mono text-cyan-400">{localSettings.retentionDays} Days</span>
-          </div>
-          <input
-            type="range"
-            min="7"
-            max="90"
-            step="7"
-            value={localSettings.retentionDays}
-            onChange={(e) =>
-              setLocalSettings({ ...localSettings, retentionDays: Number(e.target.value) })
-            }
-            className="w-full accent-cyan-500 bg-slate-800 rounded h-1.5 cursor-pointer"
-          />
         </div>
       </div>
     </div>

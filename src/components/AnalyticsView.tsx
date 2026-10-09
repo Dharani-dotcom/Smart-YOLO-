@@ -24,97 +24,91 @@ export function AnalyticsView() {
   const maxVisitors = Math.max(...hourlyTraffic.map((d) => d.visitors));
 
   return (
-    <div className="flex-1 p-6 overflow-y-auto space-y-6">
+    <div className="flex-1 p-6 overflow-y-auto space-y-6 bg-slate-50/80">
       {/* Header */}
-      <div>
-        <h1 className="text-xl font-bold text-white tracking-tight">Security & Foot-Traffic Analytics</h1>
-        <p className="text-xs text-slate-400 mt-0.5">
+      <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-xs">
+        <h1 className="text-xl font-bold text-slate-900 tracking-tight">Security & Foot-Traffic Analytics</h1>
+        <p className="text-xs text-slate-500 mt-1">
           Real-time spatial dwell metrics, department risk profiling, and loss prevention trends
         </p>
       </div>
 
-      {/* KPI Cards */}
+      {/* KPI Cards (White Theme) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-4 rounded bg-[#0d131f] border border-slate-800">
-          <span className="text-xs text-slate-400">Total Patrons Monitored</span>
-          <div className="text-2xl font-bold font-mono tabular-nums text-white mt-1">705</div>
-          <div className="text-[11px] text-emerald-400 mt-1 flex items-center gap-1">
-            <TrendingUp className="w-3 h-3" />
+        <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-xs">
+          <span className="text-xs text-slate-500 font-medium">Total Patrons Monitored</span>
+          <div className="text-2xl font-bold font-mono tabular-nums text-slate-900 mt-1">705</div>
+          <div className="text-[11px] text-emerald-700 mt-1 flex items-center gap-1 font-semibold">
+            <TrendingUp className="w-3.5 h-3.5" />
             <span>+14.2% vs previous period</span>
           </div>
         </div>
 
-        <div className="p-4 rounded bg-[#0d131f] border border-slate-800">
-          <span className="text-xs text-slate-400">Avg Floor Dwell Duration</span>
-          <div className="text-2xl font-bold font-mono tabular-nums text-cyan-300 mt-1">
+        <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-xs">
+          <span className="text-xs text-slate-500 font-medium">Avg Floor Dwell Duration</span>
+          <div className="text-2xl font-bold font-mono tabular-nums text-cyan-800 mt-1">
             3m 48s
           </div>
-          <div className="text-[11px] text-slate-400 mt-1">
+          <div className="text-[11px] text-slate-500 mt-1">
             Standard retail shopping pattern
           </div>
         </div>
 
-        <div className="p-4 rounded bg-[#0d131f] border border-slate-800">
-          <span className="text-xs text-slate-400">Threat Resolution Rate</span>
-          <div className="text-2xl font-bold font-mono tabular-nums text-emerald-400 mt-1">
+        <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-xs">
+          <span className="text-xs text-slate-500 font-medium">Threat Resolution Rate</span>
+          <div className="text-2xl font-bold font-mono tabular-nums text-emerald-700 mt-1">
             96.8%
           </div>
-          <div className="text-[11px] text-slate-400 mt-1">
+          <div className="text-[11px] text-slate-500 mt-1">
             Avg dispatch response: 42s
           </div>
         </div>
 
-        <div className="p-4 rounded bg-[#0d131f] border border-slate-800">
-          <span className="text-xs text-slate-400">Preventative Interceptions</span>
-          <div className="text-2xl font-bold font-mono tabular-nums text-rose-400 mt-1">
+        <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-xs">
+          <span className="text-xs text-slate-500 font-medium">Preventative Interceptions</span>
+          <div className="text-2xl font-bold font-mono tabular-nums text-rose-700 mt-1">
             12
           </div>
-          <div className="text-[11px] text-slate-400 mt-1">
+          <div className="text-[11px] text-slate-500 mt-1">
             Verified associate assist actions
           </div>
         </div>
       </div>
 
-      {/* Hourly Traffic Bar Visualization */}
-      <div className="p-5 rounded-lg bg-[#0d131f] border border-slate-800 space-y-4">
+      {/* Hourly Traffic Bar Visualization (White Theme) */}
+      <div className="p-5 rounded-xl bg-white border border-slate-200 space-y-4 shadow-xs">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <BarChart3 className="w-4 h-4 text-cyan-400" />
-            <h2 className="text-sm font-semibold text-white">Hourly Foot-Traffic & Scan Volume</h2>
+          <div>
+            <h2 className="text-sm font-bold text-slate-900">Today's Foot Traffic & Incident Density</h2>
+            <p className="text-xs text-slate-500 mt-0.5">Distribution across operating store hours</p>
           </div>
-          <div className="flex items-center gap-4 text-xs font-mono">
-            <div className="flex items-center gap-1.5 text-slate-400">
-              <span className="w-2.5 h-2.5 bg-cyan-500 rounded-sm" />
-              <span>Shopper Ingress</span>
-            </div>
-            <div className="flex items-center gap-1.5 text-slate-400">
-              <span className="w-2.5 h-2.5 bg-rose-500 rounded-sm" />
-              <span>Flagged Dwell Alerts</span>
-            </div>
-          </div>
+          <span className="text-[11px] font-mono text-cyan-700 font-bold bg-cyan-50 px-2 py-0.5 rounded border border-cyan-200">
+            Real-Time Rolling Feed
+          </span>
         </div>
 
-        {/* Custom Clean Bar Chart */}
-        <div className="h-56 flex items-end justify-between gap-2 pt-6 pb-2 px-2 border-b border-slate-800">
-          {hourlyTraffic.map((bar) => {
-            const heightPercent = Math.round((bar.visitors / maxVisitors) * 100);
+        <div className="h-48 flex items-end justify-between gap-2 pt-6 px-2">
+          {hourlyTraffic.map((d) => {
+            const heightPercent = Math.round((d.visitors / maxVisitors) * 100);
             return (
-              <div key={bar.hour} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group">
-                <div className="text-[10px] font-mono text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity">
-                  {bar.visitors}
-                </div>
-                <div className="w-full max-w-[36px] bg-slate-800/80 rounded-t overflow-hidden flex flex-col justify-end transition-all group-hover:bg-slate-700/80" style={{ height: `${heightPercent}%` }}>
-                  {bar.anomalies > 0 && (
-                    <div
-                      className="w-full bg-rose-500/80"
-                      style={{ height: `${bar.anomalies * 14}px` }}
-                      title={`${bar.anomalies} anomalies at ${bar.hour}`}
-                    />
+              <div key={d.hour} className="flex-1 flex flex-col items-center gap-2 group">
+                <div className="w-full bg-slate-100 rounded-t flex items-end justify-center h-36 relative overflow-hidden">
+                  <div
+                    style={{ height: `${heightPercent}%` }}
+                    className={`w-full rounded-t transition-all duration-300 ${
+                      d.anomalies > 1
+                        ? 'bg-rose-400 group-hover:bg-rose-500'
+                        : 'bg-cyan-500 group-hover:bg-cyan-600'
+                    }`}
+                  />
+                  {d.anomalies > 0 && (
+                    <span className="absolute top-1 text-[9px] font-bold font-mono text-rose-800 bg-rose-100 px-1 rounded shadow-2xs">
+                      {d.anomalies}
+                    </span>
                   )}
-                  <div className="w-full flex-1 bg-cyan-500/60 group-hover:bg-cyan-400 transition-colors" />
                 </div>
-                <span className="text-[10px] font-mono text-slate-400 tabular-nums">
-                  {bar.hour}
+                <span className="text-[10px] font-mono text-slate-500 group-hover:text-slate-900 font-medium">
+                  {d.hour}
                 </span>
               </div>
             );
@@ -122,38 +116,36 @@ export function AnalyticsView() {
         </div>
       </div>
 
-      {/* Department Breakdown Table */}
-      <div className="p-5 rounded-lg bg-[#0d131f] border border-slate-800 space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-white">Department Risk & Inspection Density</h2>
-          <span className="text-xs text-slate-500">Telemetry updated continuous</span>
-        </div>
-
+      {/* Department Breakdown Table (White Theme) */}
+      <div className="p-5 rounded-xl bg-white border border-slate-200 space-y-4 shadow-xs">
+        <h2 className="text-sm font-bold text-slate-900">Department Risk Profile & Dwell Metrics</h2>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-slate-900/60 text-slate-400 font-semibold border-b border-slate-800 text-[11px] uppercase tracking-wider">
+            <thead className="text-[11px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200 pb-2">
               <tr>
-                <th className="py-2.5 px-3">Zone / Department</th>
-                <th className="py-2.5 px-3">Scans Today</th>
-                <th className="py-2.5 px-3">Flagged Rate</th>
-                <th className="py-2.5 px-3">Average Dwell</th>
-                <th className="py-2.5 px-3">Risk Assessment</th>
+                <th className="py-2.5">Department</th>
+                <th className="py-2.5">Scans Today</th>
+                <th className="py-2.5">Flag Rate</th>
+                <th className="py-2.5">Avg Dwell</th>
+                <th className="py-2.5">Risk Rating</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60 font-mono text-slate-300">
+            <tbody className="divide-y divide-slate-100">
               {departmentMetrics.map((dept) => (
-                <tr key={dept.name} className="hover:bg-slate-800/30">
-                  <td className="py-3 px-3 font-sans font-medium text-slate-200">{dept.name}</td>
-                  <td className="py-3 px-3 tabular-nums">{dept.scans}</td>
-                  <td className="py-3 px-3 tabular-nums text-slate-300">{dept.flagRate}</td>
-                  <td className="py-3 px-3 tabular-nums text-slate-400">{dept.dwellAvg}</td>
-                  <td className="py-3 px-3 font-sans">
+                <tr key={dept.name} className="hover:bg-slate-50/80 transition-colors">
+                  <td className="py-3 font-semibold text-slate-900">{dept.name}</td>
+                  <td className="py-3 font-mono text-slate-700">{dept.scans}</td>
+                  <td className="py-3 font-mono text-cyan-800 font-bold">{dept.flagRate}</td>
+                  <td className="py-3 font-mono text-slate-600">{dept.dwellAvg}</td>
+                  <td className="py-3">
                     <span
-                      className={`text-[11px] font-medium ${
-                        dept.risk === 'Medium' ? 'text-amber-400' : 'text-emerald-400'
+                      className={`inline-block px-2 py-0.5 rounded text-[11px] font-bold ${
+                        dept.risk === 'Medium'
+                          ? 'bg-amber-100 text-amber-800 border border-amber-200'
+                          : 'bg-emerald-100 text-emerald-800 border border-emerald-200'
                       }`}
                     >
-                      {dept.risk} Risk
+                      {dept.risk}
                     </span>
                   </td>
                 </tr>

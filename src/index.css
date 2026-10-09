@@ -3,6 +3,8 @@
 @layer base {
   body {
     font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: #f8fafc;
+    color: #0f172a;
   }
   
   .font-mono, .tabular-nums {
@@ -11,7 +13,7 @@
   }
 }
 
-/* Custom animations for surveillance grid and scanner beam */
+/* Surveillance tech HUD scanline */
 @keyframes scanline {
   0% {
     transform: translateY(-100%);
@@ -38,21 +40,29 @@
   animation: radarSweep 5s linear infinite;
 }
 
-/* Custom clean scrollbars for alert and history feeds */
+/* Subtle tech grid pattern for light theme */
+.bg-tech-grid-light {
+  background-size: 28px 28px;
+  background-image: 
+    linear-gradient(to right, rgba(15, 23, 42, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(15, 23, 42, 0.04) 1px, transparent 1px);
+}
+
+/* Custom clean scrollbars for light theme */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.6);
+  background: #f1f5f9;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(51, 65, 85, 0.7);
-  border-radius: 3px;
+  background: #cbd5e1;
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(100, 116, 139, 0.9);
+  background: #94a3b8;
 }
