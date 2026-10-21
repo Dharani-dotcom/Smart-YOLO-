@@ -1,0 +1,123 @@
+{
+  "entities": {
+    "Customer": {
+      "title": "Customer",
+      "description": "Supermarket shopper profile tracked by facial biometric recognition",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 100 },
+        "status": { "type": "string", "enum": ["Active Shopper", "VIP Gold", "Flagged Loitering", "Checked Out"] },
+        "loyaltyTier": { "type": "string", "maxLength": 50 },
+        "faceConfidence": { "type": "number" },
+        "lastZone": { "type": "string", "maxLength": 100 },
+        "lastActiveProduct": { "type": "string", "maxLength": 128 },
+        "totalItemsPicked": { "type": "number" },
+        "totalCartValue": { "type": "number" },
+        "registeredAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "name", "status", "faceConfidence", "lastZone", "totalItemsPicked"]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "Supermarket catalog product with shelf bounding box identifiers",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 200 },
+        "category": { "type": "string", "maxLength": 100 },
+        "price": { "type": "number" },
+        "aisle": { "type": "string", "maxLength": 100 },
+        "shelfZone": { "type": "string", "maxLength": 100 },
+        "stockLevel": { "type": "number" },
+        "skuBarcode": { "type": "string", "maxLength": 100 },
+        "confidence": { "type": "number" }
+      },
+      "required": ["id", "name", "category", "price", "aisle", "shelfZone"]
+    },
+    "SecurityAlert": {
+      "title": "SecurityAlert",
+      "description": "Security detection and alert events",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "timestamp": { "type": "string", "maxLength": 64 },
+        "timeEpoch": { "type": "number" },
+        "camera": { "type": "string", "maxLength": 100 },
+        "title": { "type": "string", "maxLength": 200 },
+        "description": { "type": "string", "maxLength": 1000 },
+        "severity": { "type": "string", "enum": ["normal", "info", "warning", "critical"] },
+        "customerId": { "type": "string", "maxLength": 128 },
+        "productId": { "type": "string", "maxLength": 128 },
+        "confidence": { "type": "number" },
+        "location": { "type": "string", "maxLength": 200 },
+        "reviewed": { "type": "boolean" },
+        "threatDetected": { "type": "boolean" }
+      },
+      "required": ["id", "timestamp", "timeEpoch", "camera", "title", "description", "severity", "confidence", "location", "reviewed", "threatDetected"]
+    },
+    "DetectionRecord": {
+      "title": "DetectionRecord",
+      "description": "Historical detection tracking log",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "timestamp": { "type": "string", "maxLength": 64 },
+        "camera": { "type": "string", "maxLength": 100 },
+        "category": { "type": "string", "maxLength": 100 },
+        "customerId": { "type": "string", "maxLength": 128 },
+        "productId": { "type": "string", "maxLength": 128 },
+        "confidence": { "type": "number" },
+        "status": { "type": "string", "enum": ["Nominal", "Flagged", "Resolved"] },
+        "actionTaken": { "type": "string", "maxLength": 200 },
+        "zone": { "type": "string", "maxLength": 100 }
+      },
+      "required": ["id", "timestamp", "camera", "category", "customerId", "confidence", "status", "actionTaken", "zone"]
+    },
+    "RealTimePhoto": {
+      "title": "RealTimePhoto",
+      "description": "Captured frames with face and product bounding boxes",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "imageUrl": { "type": "string", "maxLength": 500000 },
+        "timestamp": { "type": "string", "maxLength": 64 },
+        "timeEpoch": { "type": "number" },
+        "camera": { "type": "string", "maxLength": 100 },
+        "location": { "type": "string", "maxLength": 200 },
+        "customerId": { "type": "string", "maxLength": 128 },
+        "customerConfidence": { "type": "number" },
+        "productId": { "type": "string", "maxLength": 128 },
+        "productName": { "type": "string", "maxLength": 200 },
+        "productPrice": { "type": "number" },
+        "productCategory": { "type": "string", "maxLength": 100 },
+        "productConfidence": { "type": "number" },
+        "eventStatus": { "type": "string", "maxLength": 100 },
+        "threatSeverity": { "type": "string", "enum": ["normal", "info", "warning"] }
+      },
+      "required": ["id", "imageUrl", "timestamp", "timeEpoch", "camera", "location", "customerId", "productId", "eventStatus", "threatSeverity"]
+    }
+  },
+  "firestore": {
+    "/customers/{customerId}": {
+      "schema": { "$ref": "#/entities/Customer" },
+      "description": "Registered shoppers with customer ID tracking"
+    },
+    "/products/{productId}": {
+      "schema": { "$ref": "#/entities/Product" },
+      "description": "Supermarket product catalog with product ID tracking"
+    },
+    "/alerts/{alertId}": {
+      "schema": { "$ref": "#/entities/SecurityAlert" },
+      "description": "Security alerts triggered by camera computer vision"
+    },
+    "/detections/{detectionId}": {
+      "schema": { "$ref": "#/entities/DetectionRecord" },
+      "description": "Detection log entries"
+    },
+    "/photos/{photoId}": {
+      "schema": { "$ref": "#/entities/RealTimePhoto" },
+      "description": "Real-time snapshot photos captured by security operators"
+    }
+  }
+}

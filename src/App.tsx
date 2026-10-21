@@ -15,6 +15,7 @@ import { DetectionsHistoryView } from './components/DetectionsHistoryView';
 import { AnalyticsView } from './components/AnalyticsView';
 import { SystemSettingsView } from './components/SystemSettingsView';
 import { playAlertChime } from './utils/audio';
+import { saveAlertToFirestore, saveDetectionToFirestore, savePhotoToFirestore } from './firebase';
 
 export default function App() {
   const [currentTab, setCurrentTab] = useState<TabType>('live');
@@ -119,6 +120,7 @@ export default function App() {
         description: template.description,
         severity: template.severity,
         customerId: template.customerId,
+        productId: template.productId,
         confidence: 89 + Math.random() * 10,
         location: template.zone,
         reviewed: false,
@@ -144,6 +146,10 @@ export default function App() {
       };
 
       setHistory((prev) => [newHistoryItem, ...prev]);
+
+      // Sync event with Customer ID and Product ID to Firestore
+      saveAlertToFirestore(newAlert).catch((err) => console.warn('Firestore alert sync:', err));
+      saveDetectionToFirestore(newHistoryItem).catch((err) => console.warn('Firestore detection sync:', err));
 
       if (settings.alertSoundEnabled) {
         playAlertChime(template.severity);
@@ -196,21 +202,24 @@ export default function App() {
 
     setAlerts((prev) => [incidentAlert, ...prev]);
 
-    setHistory((prev) => [
-      {
-        id: `DET-${Math.floor(1000 + Math.random() * 9000)}`,
-        timestamp: timeStr,
-        camera: activeCam.name.split(':')[0],
-        category: 'Suspicious Movement',
-        customerId: 'ANON-9014',
-        productId: 'PRD-4019',
-        confidence: 94.6,
-        status: 'Flagged',
-        actionTaken: 'Simulated alert prompt forwarded to security tablet',
-        zone: activeCam.zone,
-      },
-      ...prev,
-    ]);
+    const incidentHistoryItem: DetectionRecord = {
+      id: `DET-${Math.floor(1000 + Math.random() * 9000)}`,
+      timestamp: timeStr,
+      camera: activeCam.name.split(':')[0],
+      category: 'Suspicious Movement',
+      customerId: 'ANON-9014',
+      productId: 'PRD-4019',
+      confidence: 94.6,
+      status: 'Flagged',
+      actionTaken: 'Simulated alert prompt forwarded to security tablet',
+      zone: activeCam.zone,
+    };
+
+    setHistory((prev) => [incidentHistoryItem, ...prev]);
+
+    // Sync incident with customerId and productId to Firestore
+    saveAlertToFirestore(incidentAlert).catch((err) => console.warn('Firestore incident sync:', err));
+    saveDetectionToFirestore(incidentHistoryItem).catch((err) => console.warn('Firestore detection sync:', err));
 
     setFlaggedAlertTrigger((prev) => prev + 1);
 
@@ -278,6 +287,10 @@ export default function App() {
     };
 
     setHistory((prev) => [newRecord, ...prev]);
+
+    // Save photo and detection with customerId and productId to Firestore
+    savePhotoToFirestore(newPhoto).catch((err) => console.warn('Firestore photo sync:', err));
+    saveDetectionToFirestore(newRecord).catch((err) => console.warn('Firestore photo detection sync:', err));
 
     if (settings.alertSoundEnabled) {
       playAlertChime('normal');

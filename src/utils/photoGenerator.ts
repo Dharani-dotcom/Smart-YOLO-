@@ -1,6 +1,9 @@
 /**
- * Generates an authentic, high-resolution retail surveillance snapshot canvas with
- * explicit square on the customer's face (showing Customer ID) and product box (showing Product ID).
+ * Generates an authentic, high-resolution retail surveillance snapshot canvas with:
+ * 1. Explicit Full-Body Customer Bounding Box (Customer ID + Pose Telemetry)
+ * 2. Explicit Face Biometric Square (Customer ID + Retina Confidence)
+ * 3. Explicit Primary Product Bounding Box (Product ID + Price + Interaction Vector)
+ * 4. Multi-Product Shelf Bounding Boxes (Secondary Aisle Items)
  */
 export function generateSurveillanceSnapshot({
   customerId,
@@ -120,7 +123,6 @@ export function generateSurveillanceSnapshot({
     ctx.arc(w / 2 - 105, h - 105, 7, 0, Math.PI * 2);
     ctx.fill();
   } else if (scenario === 'electronics') {
-    // Modern Apple / Tech style retail store with long wooden display tables
     const tableGrad = ctx.createLinearGradient(0, h - 190, 0, h - 70);
     tableGrad.addColorStop(0, '#33271e');
     tableGrad.addColorStop(1, '#1e1610');
@@ -132,7 +134,6 @@ export function generateSurveillanceSnapshot({
     ctx.fill();
     ctx.stroke();
 
-    // Smartphone demo stands on table
     for (let dx = w / 2 - 160; dx <= w / 2 + 160; dx += 80) {
       ctx.fillStyle = '#0f172a';
       ctx.fillRect(dx, h - 165, 32, 50);
@@ -143,13 +144,11 @@ export function generateSurveillanceSnapshot({
       ctx.fillRect(dx + 2, h - 162, 28, 42);
     }
   } else if (scenario === 'boutique') {
-    // Luxury Fragrance & Cosmetics display island
     ctx.fillStyle = '#1c1917';
     ctx.fillRect(50, 120, 160, 280);
     ctx.strokeStyle = '#44403c';
     ctx.strokeRect(50, 120, 160, 280);
 
-    // Center perfume podium with golden halo
     ctx.fillStyle = '#171412';
     ctx.strokeStyle = '#ca8a04';
     ctx.lineWidth = 1.5;
@@ -161,14 +160,12 @@ export function generateSurveillanceSnapshot({
     ctx.fillStyle = 'rgba(234, 179, 8, 0.15)';
     ctx.fillRect(w / 2 - 156, h - 168, 312, 4);
   } else {
-    // Checkout Counter & POS register with barcode scanner
     ctx.fillStyle = '#111827';
     ctx.fillRect(w / 2 - 180, h - 190, 360, 115);
     ctx.strokeStyle = '#374151';
     ctx.lineWidth = 1.5;
     ctx.strokeRect(w / 2 - 180, h - 190, 360, 115);
 
-    // POS Screen
     ctx.fillStyle = '#020617';
     ctx.fillRect(w / 2 + 60, h - 230, 70, 48);
     ctx.strokeStyle = '#10b981';
@@ -178,15 +175,48 @@ export function generateSurveillanceSnapshot({
     ctx.font = '600 8px monospace';
     ctx.fillText('POS ACTIVE', w / 2 + 68, h - 200);
 
-    // Barcode conveyor belt
     ctx.fillStyle = '#1f2937';
     ctx.fillRect(w / 2 - 170, h - 150, 210, 60);
     ctx.strokeStyle = '#4b5563';
     ctx.strokeRect(w / 2 - 170, h - 150, 210, 60);
   }
 
+  // ----------------------------------------------------
+  // 2B. SECONDARY SHELF PRODUCT BOUNDING BOXES (YOLO MULTI-PRODUCT)
+  // ----------------------------------------------------
+  const shelfBoxes = [
+    { x: 62, y: 158, w: 92, h: 78, id: 'PRD-8824', label: 'Honeycrisp Apples · $5.49' },
+    { x: w - 190, y: 162, w: 96, h: 82, id: 'PRD-8829', label: 'Organic Greens · $3.99' },
+  ];
+
+  for (const sb of shelfBoxes) {
+    ctx.save();
+    ctx.fillStyle = 'rgba(56, 189, 248, 0.08)';
+    ctx.fillRect(sb.x, sb.y, sb.w, sb.h);
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.75)';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 3]);
+    ctx.strokeRect(sb.x, sb.y, sb.w, sb.h);
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
+    ctx.fillRect(sb.x, sb.y - 18, 125, 16);
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(sb.x, sb.y - 18, 125, 16);
+
+    ctx.fillStyle = '#38bdf8';
+    ctx.font = '700 9px "JetBrains Mono", monospace';
+    ctx.fillText(`[SHELF #${sb.id}]`, sb.x + 4, sb.y - 7);
+
+    ctx.fillStyle = '#bae6fd';
+    ctx.font = '600 8.5px "JetBrains Mono", monospace';
+    ctx.fillText(sb.label, sb.x, sb.y + sb.h + 11);
+    ctx.restore();
+  }
+
   // 3. Realistic Customer Figure in frame
-  const custX = w / 2 - 35;
+  const custX = w / 2 - 45;
   const custY = 140;
 
   // Floor shadow
@@ -194,6 +224,11 @@ export function generateSurveillanceSnapshot({
   ctx.beginPath();
   ctx.ellipse(custX + 45, custY + 265, 65, 14, 0, 0, Math.PI * 2);
   ctx.fill();
+
+  // Legs
+  ctx.fillStyle = '#0f172a';
+  ctx.fillRect(custX + 18, custY + 225, 22, 42);
+  ctx.fillRect(custX + 50, custY + 225, 22, 42);
 
   // Torso / Jacket
   const jacketGrad = ctx.createLinearGradient(custX, custY + 90, custX + 90, custY + 230);
@@ -262,10 +297,10 @@ export function generateSurveillanceSnapshot({
   ctx.fill();
 
   // 4. Product depiction (Phone, Perfume bottle, Watch, or Grocery Item)
-  const prodX = custX + 120;
-  const prodY = custY + 105;
-  const prodW = 58;
-  const prodH = 74;
+  const prodX = custX + 132;
+  const prodY = custY + 100;
+  const prodW = 62;
+  const prodH = 78;
 
   if (scenario === 'electronics') {
     ctx.fillStyle = '#020617';
@@ -290,10 +325,9 @@ export function generateSurveillanceSnapshot({
     ctx.strokeStyle = '#ca8a04';
     ctx.strokeRect(prodX + 11, prodY + 2, 20, 16);
   } else if (scenario === 'supermarket') {
-    // Grocery Cereal or Juice box
     ctx.fillStyle = '#ea580c';
     ctx.beginPath();
-    ctx.roundRect(prodX, prodY, 44, 62, 4);
+    ctx.roundRect(prodX, prodY, 48, 66, 4);
     ctx.fill();
     ctx.strokeStyle = '#fed7aa';
     ctx.lineWidth = 1.5;
@@ -301,9 +335,8 @@ export function generateSurveillanceSnapshot({
 
     ctx.fillStyle = '#ffffff';
     ctx.font = '700 8px sans-serif';
-    ctx.fillText('ORGANIC', prodX + 4, prodY + 22);
+    ctx.fillText('ORGANIC', prodX + 5, prodY + 24);
   } else {
-    // Watch / Jewelry Box at Checkout
     ctx.fillStyle = '#1e1b4b';
     ctx.beginPath();
     ctx.roundRect(prodX, prodY, 48, 56, 4);
@@ -316,6 +349,65 @@ export function generateSurveillanceSnapshot({
     ctx.font = '600 8.5px monospace';
     ctx.fillText('RFID', prodX + 8, prodY + 30);
   }
+
+  // ----------------------------------------------------
+  // 4B. FULL-BODY CUSTOMER BOUNDING BOX (OUTER CUSTOMER BOX)
+  // ----------------------------------------------------
+  const bodyBoxX = custX - 18;
+  const bodyBoxY = custY - 12;
+  const bodyBoxW = 128;
+  const bodyBoxH = 290;
+
+  ctx.save();
+  ctx.fillStyle = 'rgba(139, 92, 246, 0.07)';
+  ctx.fillRect(bodyBoxX, bodyBoxY, bodyBoxW, bodyBoxH);
+
+  ctx.strokeStyle = 'rgba(167, 139, 250, 0.85)';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([6, 4]);
+  ctx.strokeRect(bodyBoxX, bodyBoxY, bodyBoxW, bodyBoxH);
+  ctx.setLineDash([]);
+
+  // Outer Body Box Corner Brackets
+  const bodyBrk = 18;
+  ctx.strokeStyle = '#a78bfa';
+  ctx.lineWidth = 3.5;
+  // TL
+  ctx.beginPath();
+  ctx.moveTo(bodyBoxX, bodyBoxY + bodyBrk);
+  ctx.lineTo(bodyBoxX, bodyBoxY);
+  ctx.lineTo(bodyBoxX + bodyBrk, bodyBoxY);
+  ctx.stroke();
+  // TR
+  ctx.beginPath();
+  ctx.moveTo(bodyBoxX + bodyBoxW - bodyBrk, bodyBoxY);
+  ctx.lineTo(bodyBoxX + bodyBoxW, bodyBoxY);
+  ctx.lineTo(bodyBoxX + bodyBoxW, bodyBoxY + bodyBrk);
+  ctx.stroke();
+  // BL
+  ctx.beginPath();
+  ctx.moveTo(bodyBoxX, bodyBoxY + bodyBoxH - bodyBrk);
+  ctx.lineTo(bodyBoxX, bodyBoxY + bodyBoxH);
+  ctx.lineTo(bodyBoxX + bodyBrk, bodyBoxY + bodyBoxH);
+  ctx.stroke();
+  // BR
+  ctx.beginPath();
+  ctx.moveTo(bodyBoxX + bodyBoxW - bodyBrk, bodyBoxY + bodyBoxH);
+  ctx.lineTo(bodyBoxX + bodyBoxW, bodyBoxY + bodyBoxH);
+  ctx.lineTo(bodyBoxX + bodyBoxW, bodyBoxY + bodyBoxH - bodyBrk);
+  ctx.stroke();
+
+  // Bottom Full-Body Customer Label Pill
+  ctx.fillStyle = 'rgba(15, 12, 36, 0.94)';
+  ctx.fillRect(bodyBoxX, bodyBoxY + bodyBoxH + 4, 210, 22);
+  ctx.strokeStyle = '#a78bfa';
+  ctx.lineWidth = 1.2;
+  ctx.strokeRect(bodyBoxX, bodyBoxY + bodyBoxH + 4, 210, 22);
+
+  ctx.fillStyle = '#ddd6fe';
+  ctx.font = '700 9.5px "JetBrains Mono", monospace';
+  ctx.fillText(`CUSTOMER BOX: #${customerId} [BODY LOCK]`, bodyBoxX + 6, bodyBoxY + bodyBoxH + 18);
+  ctx.restore();
 
   // ----------------------------------------------------
   // 5. EXPLICIT SQUARE ON CUSTOMER'S FACE (CUSTOMER ID)
@@ -373,27 +465,22 @@ export function generateSurveillanceSnapshot({
   ctx.fill();
 
   // Header tag: CUSTOMER ID
-  const custTagText = `CUSTOMER ID: #${customerId}`;
-  ctx.font = '700 11.5px "JetBrains Mono", monospace';
+  const custTagText = `FACE ID: #${customerId} (${customerConfidence.toFixed(1)}%)`;
+  ctx.font = '700 11px "JetBrains Mono", monospace';
   const tagMetrics = ctx.measureText(custTagText);
-  const tagW = Math.max(tagMetrics.width + 16, 150);
+  const tagW = Math.max(tagMetrics.width + 16, 170);
   const tagH = 22;
 
   ctx.fillStyle = 'rgba(6, 182, 212, 0.95)';
   ctx.beginPath();
-  ctx.roundRect(sqFaceX - 2, sqFaceY - tagH - 4, tagW, tagH, [4, 4, 0, 0]);
+  ctx.roundRect(sqFaceX - 10, sqFaceY - tagH - 16, tagW, tagH, 4);
   ctx.fill();
 
   ctx.fillStyle = '#06131e';
-  ctx.fillText(custTagText, sqFaceX + 6, sqFaceY - 9);
-
-  // Subtext tag: Biometric Match
-  ctx.fillStyle = '#22d3ee';
-  ctx.font = '600 9.5px "JetBrains Mono", monospace';
-  ctx.fillText(`BIOMETRIC: ${customerConfidence.toFixed(1)}% MATCH · RETINA LOCK`, sqFaceX, sqFaceY + sqFaceH + 15);
+  ctx.fillText(custTagText, sqFaceX - 2, sqFaceY - 21);
 
   // ----------------------------------------------------
-  // 6. EXPLICIT SQUARE ON PRODUCT (PRODUCT ID)
+  // 6. EXPLICIT SQUARE ON PRODUCT (PRODUCT ID) + TETHER VECTOR
   // ----------------------------------------------------
   const sqProdPad = 8;
   const sqProdX = prodX - sqProdPad;
@@ -401,11 +488,23 @@ export function generateSurveillanceSnapshot({
   const sqProdW = prodW + sqProdPad * 2;
   const sqProdH = prodH + sqProdPad * 2;
 
-  ctx.strokeStyle = '#f59e0b';
+  // Interaction Tether Line from Customer Face/Body to Product Box
+  ctx.save();
+  ctx.strokeStyle = '#10b981';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([5, 3]);
+  ctx.beginPath();
+  ctx.moveTo(sqFaceX + sqFaceW, sqFaceY + sqFaceH / 2);
+  ctx.lineTo(sqProdX, sqProdY + sqProdH / 2);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.restore();
+
+  ctx.strokeStyle = '#10b981';
   ctx.lineWidth = 2.5;
   ctx.strokeRect(sqProdX, sqProdY, sqProdW, sqProdH);
 
-  ctx.strokeStyle = '#fef08a';
+  ctx.strokeStyle = '#6ee7b7';
   ctx.lineWidth = 3;
 
   // TL
@@ -437,27 +536,27 @@ export function generateSurveillanceSnapshot({
   ctx.stroke();
 
   // Interior tint
-  ctx.fillStyle = 'rgba(245, 158, 11, 0.08)';
+  ctx.fillStyle = 'rgba(16, 185, 129, 0.14)';
   ctx.fillRect(sqProdX, sqProdY, sqProdW, sqProdH);
 
   // Top header banner: PRODUCT ID
-  const prodTagText = `PRODUCT ID: #${productId}`;
-  ctx.font = '700 11.5px "JetBrains Mono", monospace';
+  const prodTagText = `PRODUCT BOX: #${productId} · $${productPrice.toFixed(2)}`;
+  ctx.font = '700 11px "JetBrains Mono", monospace';
   const prodTagMetrics = ctx.measureText(prodTagText);
-  const pTagW = Math.max(prodTagMetrics.width + 16, 145);
+  const pTagW = Math.max(prodTagMetrics.width + 16, 175);
 
-  ctx.fillStyle = 'rgba(245, 158, 11, 0.95)';
+  ctx.fillStyle = 'rgba(16, 185, 129, 0.95)';
   ctx.beginPath();
-  ctx.roundRect(sqProdX - 2, sqProdY - tagH - 4, pTagW, tagH, [4, 4, 0, 0]);
+  ctx.roundRect(sqProdX - 2, sqProdY - tagH - 4, pTagW, tagH, 4);
   ctx.fill();
 
-  ctx.fillStyle = '#1c1002';
+  ctx.fillStyle = '#052e16';
   ctx.fillText(prodTagText, sqProdX + 6, sqProdY - 9);
 
-  // Subtext tag: Product Name and Price
-  ctx.fillStyle = '#fbbf24';
+  // Subtext tag: Product Name and Category
+  ctx.fillStyle = '#6ee7b7';
   ctx.font = '600 9.5px "JetBrains Mono", monospace';
-  ctx.fillText(`${productName} · $${productPrice}`, sqProdX - 6, sqProdY + sqProdH + 15);
+  ctx.fillText(`${productName} (${productCategory})`, sqProdX - 2, sqProdY + sqProdH + 15);
 
   // ----------------------------------------------------
   // 7. SURVEILLANCE CCTV HUD OVERLAYS
@@ -479,17 +578,21 @@ export function generateSurveillanceSnapshot({
   // Timestamp in top right
   ctx.textAlign = 'right';
   ctx.fillStyle = '#38bdf8';
-  ctx.fillText(`${timestamp}  ·  AI OPTICAL FRAME`, w - 28, 32);
+  ctx.fillText(`${timestamp}  ·  YOLO CV MULTI-BOX FRAME`, w - 28, 32);
 
   // Bottom footer: Loss prevention status
   ctx.textAlign = 'left';
-  ctx.fillStyle = '#64748b';
+  ctx.fillStyle = '#94a3b8';
   ctx.font = '500 10.5px "JetBrains Mono", monospace';
-  ctx.fillText(`DUAL-TAG SYNC: FACE-ID #${customerId} ↔ ITEM #${productId} [EAS SECURE]`, 28, h - 20);
+  ctx.fillText(
+    `BOXED OBJECTS: CUSTOMER #${customerId} (BODY + FACE) ↔ PRODUCT #${productId} + 2 SHELF ITEMS`,
+    28,
+    h - 20
+  );
 
   ctx.textAlign = 'right';
   ctx.fillStyle = '#34d399';
-  ctx.fillText(`REAL SHOP SURVEILLANCE FEED`, w - 28, h - 20);
+  ctx.fillText(`AI RETAIL VISION v4.2`, w - 28, h - 20);
 
   return canvas.toDataURL('image/jpeg', 0.94);
 }
