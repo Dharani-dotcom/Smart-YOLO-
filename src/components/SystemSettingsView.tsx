@@ -13,7 +13,12 @@ import {
   RefreshCw,
   ExternalLink,
   Search,
-  Database
+  Database,
+  FileText,
+  Download,
+  Copy,
+  Table,
+  GitBranch
 } from 'lucide-react';
 import { SystemSettingsState } from '../types';
 import {
@@ -41,7 +46,8 @@ export function SystemSettingsView({
   const [savedSuccess, setSavedSuccess] = useState(false);
 
   // Firestore DB Explorer State
-  const [activeDbTab, setActiveDbTab] = useState<'customers' | 'products'>('customers');
+  const [activeDbTab, setActiveDbTab] = useState<'customers' | 'products' | 'er_tables'>('er_tables');
+  const [copiedSql, setCopiedSql] = useState(false);
   const [customers, setCustomers] = useState<CustomerDoc[]>([]);
   const [products, setProducts] = useState<ProductDoc[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -363,6 +369,218 @@ export function SystemSettingsView({
     }
   };
 
+  const sqlSubmissionScript = `-- ============================================================================
+-- SMART SHOP ASSISTANT: CONVERSION OF ER DIAGRAM INTO RELATIONAL TABLES (SQL)
+-- ============================================================================
+
+-- 1. CUSTOMERS TABLE (Strong Entity: Shopper / YOLO Face Square Profile)
+CREATE TABLE CUSTOMERS (
+    cu_sid VARCHAR(20) PRIMARY KEY,
+    customer_name VARCHAR(50) NOT NULL,
+    loyalty_tier VARCHAR(30) DEFAULT 'Standard',
+    face_confidence DECIMAL(5,2) NOT NULL,
+    last_zone VARCHAR(60) NOT NULL,
+    registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 2. PRODUCTS TABLE (Strong Entity: Supermarket Retail Inventory)
+CREATE TABLE PRODUCTS (
+    product_id VARCHAR(20) PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    category VARCHAR(50) NOT NULL,
+    price DECIMAL(10,2) NOT NULL CHECK (price >= 0),
+    aisle VARCHAR(50) NOT NULL,
+    stock_level INT NOT NULL DEFAULT 30,
+    sku_barcode VARCHAR(30) UNIQUE NOT NULL
+);
+
+-- 3. DETECTIONS TABLE (M:N Relationship Entity: Customer Picks/Interacts with Product)
+CREATE TABLE DETECTIONS (
+    detection_id VARCHAR(36) PRIMARY KEY,
+    cu_sid VARCHAR(20) NOT NULL,
+    product_id VARCHAR(20) NOT NULL,
+    camera_zone VARCHAR(50) NOT NULL,
+    category VARCHAR(40) NOT NULL,
+    confidence DECIMAL(5,2) NOT NULL,
+    status VARCHAR(25) DEFAULT 'Nominal',
+    detected_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (cu_sid) REFERENCES CUSTOMERS(cu_sid) ON DELETE CASCADE,
+    FOREIGN KEY (product_id) REFERENCES PRODUCTS(product_id) ON DELETE CASCADE
+);
+
+-- 4. ALERTS TABLE (1:N Relationship Entity: Security & Inventory Notifications)
+CREATE TABLE ALERTS (
+    alert_id VARCHAR(36) PRIMARY KEY,
+    cu_sid VARCHAR(20),
+    product_id VARCHAR(20),
+    camera_name VARCHAR(50) NOT NULL,
+    severity VARCHAR(20) NOT NULL,
+    description TEXT NOT NULL,
+    reviewed BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (cu_sid) REFERENCES CUSTOMERS(cu_sid) ON DELETE SET NULL,
+    FOREIGN KEY (product_id) REFERENCES PRODUCTS(product_id) ON DELETE SET NULL
+);
+
+-- 5. SNAPSHOTS TABLE (1:N Relationship Entity: Captured CCTV Evidence Frames)
+CREATE TABLE SNAPSHOTS (
+    photo_id VARCHAR(36) PRIMARY KEY,
+    cu_sid VARCHAR(20) NOT NULL,
+    product_id VARCHAR(20) NOT NULL,
+    camera_name VARCHAR(50) NOT NULL,
+    customer_confidence DECIMAL(5,2) NOT NULL,
+    image_url TEXT NOT NULL,
+    captured_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (cu_sid) REFERENCES CUSTOMERS(cu_sid),
+    FOREIGN KEY (product_id) REFERENCES PRODUCTS(product_id)
+);
+
+-- SAMPLE DATA INSERTION
+INSERT INTO CUSTOMERS VALUES ('HUMAN-1042', 'Marcus Vance', 'Gold Executive', 99.40, 'Organic Fruits & Greens Aisle', CURRENT_TIMESTAMP);
+INSERT INTO CUSTOMERS VALUES ('HUMAN-5519', 'Robert Langdon', 'Silver Member', 98.80, 'Breakfast Aisle 3 (Shelves)', CURRENT_TIMESTAMP);
+INSERT INTO CUSTOMERS VALUES ('HUMAN-3910', 'Sarah Jenkins', 'Standard', 99.00, 'Refrigerated Cases Aisle 4', CURRENT_TIMESTAMP);
+
+INSERT INTO PRODUCTS VALUES ('PRD-8821', 'Organic Hass Avocados (4pk)', 'Produce', 4.99, 'Aisle 1 - Produce', 42, '078512882109');
+INSERT INTO PRODUCTS VALUES ('PRD-7714', 'Artisan Honey Almond Granola', 'Breakfast Cereals', 6.49, 'Aisle 3 - Breakfast', 28, '034211771402');
+INSERT INTO PRODUCTS VALUES ('PRD-3301', 'Organic Almond Milk 64oz', 'Dairy & Plant Milk', 3.89, 'Aisle 4 - Refrigerated', 35, '099182330118');
+
+INSERT INTO DETECTIONS VALUES ('DET-1001', 'HUMAN-1042', 'PRD-8821', 'CAM-01: Produce Aisle', 'Product Interaction', 99.40, 'Nominal', CURRENT_TIMESTAMP);
+INSERT INTO DETECTIONS VALUES ('DET-1002', 'HUMAN-5519', 'PRD-7714', 'CAM-02: Cereal Aisle', 'Product Interaction', 98.80, 'Nominal', CURRENT_TIMESTAMP);`;
+
+  const handleCopySql = () => {
+    navigator.clipboard.writeText(sqlSubmissionScript);
+    setCopiedSql(true);
+    setTimeout(() => setCopiedSql(false), 2500);
+  };
+
+  const handleDownloadSubmissionReport = () => {
+    const htmlContent = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Conversion of ER Diagram into Tables - Smart Shop Assistant</title>
+  <style>
+    body { font-family: 'Segoe UI', Arial, sans-serif; color: #0f172a; line-height: 1.5; max-width: 900px; margin: 30px auto; padding: 20px; }
+    h1 { color: #0f172a; border-bottom: 3px solid #0284c7; padding-bottom: 8px; margin-bottom: 6px; }
+    h2 { color: #0369a1; margin-top: 28px; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px; }
+    h3 { color: #1e293b; margin-top: 18px; margin-bottom: 6px; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 22px 0; font-size: 13px; }
+    th, td { border: 1px solid #94a3b8; padding: 8px 10px; text-align: left; }
+    th { background-color: #f1f5f9; font-weight: 700; color: #0f172a; }
+    .pk { color: #0369a1; font-weight: bold; }
+    .fk { color: #b45309; font-weight: bold; }
+    .schema-box { background: #f8fafc; border-left: 4px solid #0284c7; padding: 12px 16px; margin: 12px 0; font-family: monospace; font-size: 13px; }
+    pre { background: #0f172a; color: #f8fafc; padding: 14px; border-radius: 6px; font-size: 12px; overflow-x: auto; }
+  </style>
+</head>
+<body>
+  <h1>CONVERSION OF ER DIAGRAM INTO RELATIONAL TABLES</h1>
+  <p><strong>Project Title:</strong> Smart Shop Assistant — AI-Powered Retail CCTV & Inventory Management System<br/>
+  <strong>Database Engine:</strong> Google Firebase Firestore / Relational Schema Mapping</p>
+
+  <h2>1. Step-by-Step ER-to-Relational Mapping Rules</h2>
+  <ol>
+    <li><strong>Mapping Strong Entities:</strong> Each strong entity in the ER Diagram (<em>CUSTOMER</em> and <em>PRODUCT</em>) is converted into a separate table with its unique identifier as the <strong>Primary Key (PK)</strong> (<code>cu_sid</code> and <code>product_id</code>).</li>
+    <li><strong>Mapping Many-to-Many (M:N) Relationship:</strong> A Customer can pick multiple Products, and a Product can be picked by multiple Customers. This <em>M:N</em> relationship (<em>INTERACTS_WITH</em>) is converted into a separate associative table named <strong>DETECTIONS</strong> containing <strong>Foreign Keys (FK)</strong> referencing both <code>cu_sid</code> and <code>product_id</code>.</li>
+    <li><strong>Mapping One-to-Many (1:N) Relationships:</strong> Security notifications and camera captures are mapped into the <strong>ALERTS</strong> and <strong>SNAPSHOTS</strong> tables using Foreign Keys pointing to the respective Customer and Product records.</li>
+  </ol>
+
+  <h2>2. Relational Schema Notation</h2>
+  <div class="schema-box">
+    1. <strong>CUSTOMERS</strong> (<u>cu_sid [PK]</u>, customer_name, loyalty_tier, face_confidence, last_zone, registered_at)<br/>
+    2. <strong>PRODUCTS</strong> (<u>product_id [PK]</u>, name, category, price, aisle, stock_level, sku_barcode)<br/>
+    3. <strong>DETECTIONS</strong> (<u>detection_id [PK]</u>, <em>cu_sid [FK]</em>, <em>product_id [FK]</em>, camera_zone, category, confidence, status, detected_at)<br/>
+    4. <strong>ALERTS</strong> (<u>alert_id [PK]</u>, <em>cu_sid [FK]</em>, <em>product_id [FK]</em>, camera_name, severity, description, reviewed, created_at)<br/>
+    5. <strong>SNAPSHOTS</strong> (<u>photo_id [PK]</u>, <em>cu_sid [FK]</em>, <em>product_id [FK]</em>, camera_name, customer_confidence, image_url, captured_at)
+  </div>
+
+  <h2>3. Converted Database Tables (Structure & Data Dictionary)</h2>
+
+  <h3>Table 1: CUSTOMERS (Entity: Shopper Identified via YOLO Face Square)</h3>
+  <table>
+    <thead><tr><th>Column Name</th><th>Data Type</th><th>Key / Constraint</th><th>Description</th><th>Sample Value</th></tr></thead>
+    <tbody>
+      <tr><td class="pk">cu_sid</td><td>VARCHAR(20)</td><td>PRIMARY KEY, NOT NULL</td><td>Unique Customer ID from YOLO Face Square</td><td>HUMAN-1042</td></tr>
+      <tr><td>customer_name</td><td>VARCHAR(50)</td><td>NOT NULL</td><td>Full Name of Registered Shopper</td><td>Marcus Vance</td></tr>
+      <tr><td>loyalty_tier</td><td>VARCHAR(30)</td><td>DEFAULT 'Standard'</td><td>Membership Tier</td><td>Gold Executive</td></tr>
+      <tr><td>face_confidence</td><td>DECIMAL(5,2)</td><td>NOT NULL</td><td>YOLO Face Detection Confidence (%)</td><td>99.40</td></tr>
+      <tr><td>last_zone</td><td>VARCHAR(60)</td><td>NOT NULL</td><td>Current Supermarket CCTV Aisle</td><td>Organic Fruits & Greens Aisle</td></tr>
+      <tr><td>registered_at</td><td>TIMESTAMP</td><td>NOT NULL</td><td>Entry Timestamp</td><td>2026-10-22 10:15:00</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Table 2: PRODUCTS (Entity: Retail Merchandise Boxed by YOLO)</h3>
+  <table>
+    <thead><tr><th>Column Name</th><th>Data Type</th><th>Key / Constraint</th><th>Description</th><th>Sample Value</th></tr></thead>
+    <tbody>
+      <tr><td class="pk">product_id</td><td>VARCHAR(20)</td><td>PRIMARY KEY, NOT NULL</td><td>Unique Product ID from YOLO Product Box</td><td>PRD-8821</td></tr>
+      <tr><td>name</td><td>VARCHAR(100)</td><td>NOT NULL</td><td>Retail Item Name</td><td>Organic Hass Avocados (4pk)</td></tr>
+      <tr><td>category</td><td>VARCHAR(50)</td><td>NOT NULL</td><td>Supermarket Department</td><td>Produce</td></tr>
+      <tr><td>price</td><td>DECIMAL(10,2)</td><td>NOT NULL, CHECK (price >= 0)</td><td>Unit Price ($)</td><td>4.99</td></tr>
+      <tr><td>aisle</td><td>VARCHAR(50)</td><td>NOT NULL</td><td>Shelf Location</td><td>Aisle 1 - Produce</td></tr>
+      <tr><td>stock_level</td><td>INT</td><td>NOT NULL</td><td>Available Shelf Units</td><td>42</td></tr>
+      <tr><td>sku_barcode</td><td>VARCHAR(30)</td><td>UNIQUE, NOT NULL</td><td>EAN/UPC Barcode</td><td>078512882109</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Table 3: DETECTIONS (M:N Relationship Table: Customer <-> Product Interaction)</h3>
+  <table>
+    <thead><tr><th>Column Name</th><th>Data Type</th><th>Key / Constraint</th><th>Description</th><th>Sample Value</th></tr></thead>
+    <tbody>
+      <tr><td class="pk">detection_id</td><td>VARCHAR(36)</td><td>PRIMARY KEY, NOT NULL</td><td>Unique Detection Event ID</td><td>DET-1001</td></tr>
+      <tr><td class="fk">cu_sid</td><td>VARCHAR(20)</td><td>FOREIGN KEY -> CUSTOMERS(cu_sid)</td><td>Shopper Involved in Detection</td><td>HUMAN-1042</td></tr>
+      <tr><td class="fk">product_id</td><td>VARCHAR(20)</td><td>FOREIGN KEY -> PRODUCTS(product_id)</td><td>Product Picked / Inspected</td><td>PRD-8821</td></tr>
+      <tr><td>camera_zone</td><td>VARCHAR(50)</td><td>NOT NULL</td><td>CCTV Channel ID & Location</td><td>CAM-01: Produce Aisle</td></tr>
+      <tr><td>category</td><td>VARCHAR(40)</td><td>NOT NULL</td><td>Interaction Type</td><td>Product Interaction</td></tr>
+      <tr><td>confidence</td><td>DECIMAL(5,2)</td><td>NOT NULL</td><td>Detection Confidence Score</td><td>99.40</td></tr>
+      <tr><td>status</td><td>VARCHAR(25)</td><td>DEFAULT 'Nominal'</td><td>Event Classification</td><td>Nominal</td></tr>
+      <tr><td>detected_at</td><td>TIMESTAMP</td><td>NOT NULL</td><td>Detection Timestamp</td><td>2026-10-22 10:18:42</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Table 4: ALERTS (1:N Relationship Table: Security & Inventory Warnings)</h3>
+  <table>
+    <thead><tr><th>Column Name</th><th>Data Type</th><th>Key / Constraint</th><th>Description</th><th>Sample Value</th></tr></thead>
+    <tbody>
+      <tr><td class="pk">alert_id</td><td>VARCHAR(36)</td><td>PRIMARY KEY, NOT NULL</td><td>Unique Alert ID</td><td>ALT-4091</td></tr>
+      <tr><td class="fk">cu_sid</td><td>VARCHAR(20)</td><td>FOREIGN KEY -> CUSTOMERS(cu_sid)</td><td>Linked Customer ID</td><td>HUMAN-3910</td></tr>
+      <tr><td class="fk">product_id</td><td>VARCHAR(20)</td><td>FOREIGN KEY -> PRODUCTS(product_id)</td><td>Linked Product ID</td><td>PRD-3301</td></tr>
+      <tr><td>camera_name</td><td>VARCHAR(50)</td><td>NOT NULL</td><td>Source Camera Feed</td><td>CAM-03: Dairy Section</td></tr>
+      <tr><td>severity</td><td>VARCHAR(20)</td><td>NOT NULL</td><td>Alert Priority (normal, warning, critical)</td><td>warning</td></tr>
+      <tr><td>description</td><td>TEXT</td><td>NOT NULL</td><td>Shopkeeper Notification Details</td><td>Unusual shelf dwell time detected</td></tr>
+      <tr><td>reviewed</td><td>BOOLEAN</td><td>DEFAULT FALSE</td><td>Acknowledged by Shopkeeper</td><td>false</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Table 5: SNAPSHOTS (1:N Relationship Table: Saved CCTV Evidence Frames)</h3>
+  <table>
+    <thead><tr><th>Column Name</th><th>Data Type</th><th>Key / Constraint</th><th>Description</th><th>Sample Value</th></tr></thead>
+    <tbody>
+      <tr><td class="pk">photo_id</td><td>VARCHAR(36)</td><td>PRIMARY KEY, NOT NULL</td><td>Unique Snapshot ID</td><td>PHOTO-712</td></tr>
+      <tr><td class="fk">cu_sid</td><td>VARCHAR(20)</td><td>FOREIGN KEY -> CUSTOMERS(cu_sid)</td><td>Customer in Captured Frame</td><td>HUMAN-1042</td></tr>
+      <tr><td class="fk">product_id</td><td>VARCHAR(20)</td><td>FOREIGN KEY -> PRODUCTS(product_id)</td><td>Product in Captured Frame</td><td>PRD-8821</td></tr>
+      <tr><td>camera_name</td><td>VARCHAR(50)</td><td>NOT NULL</td><td>Camera Source</td><td>CAM-01: Produce Aisle</td></tr>
+      <tr><td>customer_confidence</td><td>DECIMAL(5,2)</td><td>NOT NULL</td><td>YOLO Face Match Score</td><td>99.40</td></tr>
+      <tr><td>captured_at</td><td>TIMESTAMP</td><td>NOT NULL</td><td>Snapshot Capture Time</td><td>2026-10-22 10:20:11</td></tr>
+    </tbody>
+  </table>
+
+  <h2>4. SQL Implementation (DDL & DML Queries)</h2>
+  <pre>${sqlSubmissionScript}</pre>
+</body>
+</html>`;
+
+    const blob = new Blob([htmlContent], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'Smart_Shop_ER_to_Tables_Submission.html';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   const filteredCustomers = customers.filter(
     (c) =>
       c.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -380,30 +598,40 @@ export function SystemSettingsView({
   return (
     <div className="flex-1 p-6 overflow-y-auto space-y-6 max-w-5xl bg-slate-50/80">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 rounded-xl bg-white border border-slate-200 shadow-xs">
+      <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-xl bg-white border border-slate-200 shadow-xs">
         <div>
-          <h1 className="text-xl font-bold text-slate-900 tracking-tight">System Settings & Firebase Database</h1>
+          <h1 className="text-xl font-bold text-slate-900 tracking-tight">Database, ER Tables & Shop Settings</h1>
           <p className="text-xs text-slate-500 mt-1">
-            Configure surveillance parameters and manage live Firestore database records (Customer IDs & Product IDs)
+            View ER-to-Relational Table Mapping, manage live Firestore records (cu_sid & product_id), and download your College Submission Report
           </p>
         </div>
 
-        <button
-          onClick={handleSave}
-          className="flex items-center gap-1.5 px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white font-bold text-xs rounded-lg transition-colors shadow-xs"
-        >
-          {savedSuccess ? (
-            <>
-              <Check className="w-3.5 h-3.5 text-white" />
-              <span>Saved Successfully</span>
-            </>
-          ) : (
-            <>
-              <Save className="w-3.5 h-3.5" />
-              <span>Save Configuration</span>
-            </>
-          )}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleDownloadSubmissionReport}
+            className="flex items-center gap-1.5 px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-lg transition-colors shadow-xs cursor-pointer"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>Download ER-to-Tables Submission</span>
+          </button>
+
+          <button
+            onClick={handleSave}
+            className="flex items-center gap-1.5 px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white font-bold text-xs rounded-lg transition-colors shadow-xs cursor-pointer"
+          >
+            {savedSuccess ? (
+              <>
+                <Check className="w-3.5 h-3.5 text-white" />
+                <span>Saved Successfully</span>
+              </>
+            ) : (
+              <>
+                <Save className="w-3.5 h-3.5" />
+                <span>Save Configuration</span>
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
       {savedSuccess && (
@@ -421,7 +649,7 @@ export function SystemSettingsView({
               <Database className="w-5 h-5 text-amber-500" />
             </div>
             <div>
-              <h2 className="text-sm font-bold text-slate-900">Firebase Firestore Cloud Database</h2>
+              <h2 className="text-sm font-bold text-slate-900">Firebase Firestore Cloud Database & Relational Schema</h2>
               <div className="text-[11px] text-slate-500">
                 Connected to project: <span className="font-semibold text-slate-700">{FIREBASE_PROJECT_ID}</span>
               </div>
@@ -464,7 +692,7 @@ export function SystemSettingsView({
 
           <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 flex flex-col justify-between space-y-2">
             <div>
-              <div className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Database Collections</div>
+              <div className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Database Collections (Tables)</div>
               <div className="text-xs text-slate-700 mt-1 flex flex-wrap gap-1.5">
                 <span className="px-2 py-0.5 rounded bg-blue-100 text-blue-800 font-mono font-semibold">/customers</span>
                 <span className="px-2 py-0.5 rounded bg-indigo-100 text-indigo-800 font-mono font-semibold">/products</span>
@@ -477,14 +705,14 @@ export function SystemSettingsView({
             <div className="flex items-center gap-2">
               <button
                 onClick={handleSyncAllMockData}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-cyan-700 hover:bg-cyan-800 text-white rounded-lg text-xs font-semibold transition-colors shadow-xs"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-cyan-700 hover:bg-cyan-800 text-white rounded-lg text-xs font-semibold transition-colors shadow-xs cursor-pointer"
               >
                 <RefreshCw className="w-3.5 h-3.5" />
                 <span>Re-Sync / Push App Data</span>
               </button>
               <button
                 onClick={() => setIsAddingData(!isAddingData)}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-lg text-xs font-semibold transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5 text-cyan-600" />
                 <span>{isAddingData ? 'Hide Add Form' : 'Add Custom ID'}</span>
@@ -635,10 +863,21 @@ export function SystemSettingsView({
         {/* Database Explorer Tabs & Table */}
         <div className="pt-2">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
-            <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-lg">
+            <div className="flex flex-wrap items-center gap-1.5 bg-slate-100 p-1 rounded-lg">
+              <button
+                onClick={() => setActiveDbTab('er_tables')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold transition-colors cursor-pointer ${
+                  activeDbTab === 'er_tables'
+                    ? 'bg-indigo-600 text-white shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <GitBranch className="w-3.5 h-3.5" />
+                <span>ER Diagram → Tables (Submission)</span>
+              </button>
               <button
                 onClick={() => setActiveDbTab('customers')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold transition-colors ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold transition-colors cursor-pointer ${
                   activeDbTab === 'customers'
                     ? 'bg-white text-slate-900 shadow-xs'
                     : 'text-slate-600 hover:text-slate-900'
@@ -649,7 +888,7 @@ export function SystemSettingsView({
               </button>
               <button
                 onClick={() => setActiveDbTab('products')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold transition-colors ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold transition-colors cursor-pointer ${
                   activeDbTab === 'products'
                     ? 'bg-white text-slate-900 shadow-xs'
                     : 'text-slate-600 hover:text-slate-900'
@@ -660,32 +899,204 @@ export function SystemSettingsView({
               </button>
             </div>
 
-            <div className="flex items-center gap-2">
-              <div className="relative">
-                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
-                <input
-                  type="text"
-                  placeholder="Filter IDs or names..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-8 pr-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:border-cyan-500 w-48"
-                />
-              </div>
+            {activeDbTab !== 'er_tables' && (
+              <div className="flex items-center gap-2">
+                <div className="relative">
+                  <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
+                  <input
+                    type="text"
+                    placeholder="Filter IDs or names..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-8 pr-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:border-cyan-500 w-48"
+                  />
+                </div>
 
-              <button
-                onClick={loadDatabaseData}
-                disabled={loadingDb}
-                title="Refresh database records"
-                className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-600"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 ${loadingDb ? 'animate-spin text-cyan-600' : ''}`} />
-              </button>
-            </div>
+                <button
+                  onClick={loadDatabaseData}
+                  disabled={loadingDb}
+                  title="Refresh database records"
+                  className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 cursor-pointer"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${loadingDb ? 'animate-spin text-cyan-600' : ''}`} />
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Table display */}
           <div className="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-xs">
-            {activeDbTab === 'customers' ? (
+            {activeDbTab === 'er_tables' ? (
+              <div className="p-4 space-y-5 text-xs">
+                {/* Top Banner with Download & Copy SQL */}
+                <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-xl bg-indigo-50/80 border border-indigo-200">
+                  <div>
+                    <div className="font-bold text-indigo-950 text-sm flex items-center gap-2">
+                      <Table className="w-4 h-4 text-indigo-600" />
+                      <span>College Project Submission: Conversion of ER Diagram into Relational Tables</span>
+                    </div>
+                    <p className="text-[11px] text-indigo-700 mt-0.5">
+                      Shows how Entities (Rectangles) and Relationships (Diamonds) convert into Primary Key (PK) & Foreign Key (FK) Tables.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleCopySql}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white hover:bg-indigo-100 text-indigo-700 border border-indigo-300 font-bold text-xs transition-colors cursor-pointer"
+                    >
+                      {copiedSql ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                      <span>{copiedSql ? 'Copied SQL!' : 'Copy SQL Queries'}</span>
+                    </button>
+                    <button
+                      onClick={handleDownloadSubmissionReport}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs transition-colors cursor-pointer"
+                    >
+                      <FileText className="w-3.5 h-3.5" />
+                      <span>Download Printable Report (.HTML)</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Visual ER-to-Relational Diagram */}
+                <div className="p-4 rounded-xl bg-slate-900 text-slate-100 border border-slate-800 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-cyan-400">
+                      1. Visual ER Diagram & Cardinality Mapping
+                    </span>
+                    <span className="text-[11px] text-slate-400 font-mono">
+                      [Entity] ── (M:N Diamond) ── [Associative Table]
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-center pt-1">
+                    {/* Entity 1: CUSTOMERS */}
+                    <div className="p-3 rounded-lg bg-slate-800/90 border-2 border-cyan-500/70 space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-cyan-300 text-xs">ENTITY: CUSTOMERS</span>
+                        <span className="px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-mono text-[10px]">1 / M</span>
+                      </div>
+                      <div className="text-[11px] font-mono space-y-0.5 text-slate-300">
+                        <div className="text-amber-300 font-bold underline">PK: cu_sid (VARCHAR)</div>
+                        <div>• customer_name</div>
+                        <div>• loyalty_tier</div>
+                        <div>• face_confidence</div>
+                        <div>• last_zone</div>
+                      </div>
+                    </div>
+
+                    {/* Relationship Diamond -> Associative Table: DETECTIONS */}
+                    <div className="p-3 rounded-lg bg-indigo-950/90 border-2 border-indigo-400 space-y-1.5 text-center relative">
+                      <div className="text-[10px] uppercase tracking-wider text-indigo-300 font-bold">
+                        ◆ M:N Relationship Converted to Table
+                      </div>
+                      <div className="font-bold text-white text-xs">TABLE: DETECTIONS</div>
+                      <div className="text-[11px] font-mono space-y-0.5 text-slate-200 text-left bg-slate-900/70 p-2 rounded border border-indigo-500/30">
+                        <div className="text-amber-300 font-bold underline">PK: detection_id</div>
+                        <div className="text-cyan-300 font-bold">FK1: cu_sid → CUSTOMERS</div>
+                        <div className="text-emerald-300 font-bold">FK2: product_id → PRODUCTS</div>
+                        <div>• camera_zone, confidence, detected_at</div>
+                      </div>
+                    </div>
+
+                    {/* Entity 2: PRODUCTS */}
+                    <div className="p-3 rounded-lg bg-slate-800/90 border-2 border-emerald-500/70 space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-emerald-300 text-xs">ENTITY: PRODUCTS</span>
+                        <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono text-[10px]">N / 1</span>
+                      </div>
+                      <div className="text-[11px] font-mono space-y-0.5 text-slate-300">
+                        <div className="text-amber-300 font-bold underline">PK: product_id (VARCHAR)</div>
+                        <div>• name, category</div>
+                        <div>• price (DECIMAL)</div>
+                        <div>• aisle, stock_level</div>
+                        <div>• sku_barcode (UNIQUE)</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Converted Relational Schemas */}
+                <div className="space-y-3">
+                  <div className="font-bold text-slate-900 text-xs uppercase tracking-wider">
+                    2. Converted Relational Schema Tables (Ready for Report)
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {/* Table 1 Schema */}
+                    <div className="border border-slate-200 rounded-lg overflow-hidden">
+                      <div className="bg-slate-100 px-3 py-2 font-bold text-slate-800 border-b border-slate-200 flex justify-between">
+                        <span>Table 1: CUSTOMERS</span>
+                        <span className="text-[10px] font-mono text-cyan-700 bg-cyan-50 px-1.5 py-0.5 rounded border border-cyan-200">Strong Entity</span>
+                      </div>
+                      <table className="w-full text-left text-[11px]">
+                        <thead className="bg-slate-50 text-slate-500 border-b border-slate-200">
+                          <tr>
+                            <th className="py-1.5 px-2.5">Attribute</th>
+                            <th className="py-1.5 px-2.5">Data Type</th>
+                            <th className="py-1.5 px-2.5">Key / Constraint</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 font-mono">
+                          <tr><td className="py-1.5 px-2.5 font-bold text-cyan-700 underline">cu_sid</td><td className="py-1.5 px-2.5">VARCHAR(20)</td><td className="py-1.5 px-2.5 font-sans font-bold text-amber-700">PRIMARY KEY</td></tr>
+                          <tr><td className="py-1.5 px-2.5">customer_name</td><td className="py-1.5 px-2.5">VARCHAR(50)</td><td className="py-1.5 px-2.5 font-sans text-slate-600">NOT NULL</td></tr>
+                          <tr><td className="py-1.5 px-2.5">loyalty_tier</td><td className="py-1.5 px-2.5">VARCHAR(30)</td><td className="py-1.5 px-2.5 font-sans text-slate-600">DEFAULT &apos;Standard&apos;</td></tr>
+                          <tr><td className="py-1.5 px-2.5">face_confidence</td><td className="py-1.5 px-2.5">DECIMAL(5,2)</td><td className="py-1.5 px-2.5 font-sans text-slate-600">NOT NULL</td></tr>
+                          <tr><td className="py-1.5 px-2.5">last_zone</td><td className="py-1.5 px-2.5">VARCHAR(60)</td><td className="py-1.5 px-2.5 font-sans text-slate-600">NOT NULL</td></tr>
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Table 2 Schema */}
+                    <div className="border border-slate-200 rounded-lg overflow-hidden">
+                      <div className="bg-slate-100 px-3 py-2 font-bold text-slate-800 border-b border-slate-200 flex justify-between">
+                        <span>Table 2: PRODUCTS</span>
+                        <span className="text-[10px] font-mono text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">Strong Entity</span>
+                      </div>
+                      <table className="w-full text-left text-[11px]">
+                        <thead className="bg-slate-50 text-slate-500 border-b border-slate-200">
+                          <tr>
+                            <th className="py-1.5 px-2.5">Attribute</th>
+                            <th className="py-1.5 px-2.5">Data Type</th>
+                            <th className="py-1.5 px-2.5">Key / Constraint</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 font-mono">
+                          <tr><td className="py-1.5 px-2.5 font-bold text-emerald-700 underline">product_id</td><td className="py-1.5 px-2.5">VARCHAR(20)</td><td className="py-1.5 px-2.5 font-sans font-bold text-amber-700">PRIMARY KEY</td></tr>
+                          <tr><td className="py-1.5 px-2.5">name</td><td className="py-1.5 px-2.5">VARCHAR(100)</td><td className="py-1.5 px-2.5 font-sans text-slate-600">NOT NULL</td></tr>
+                          <tr><td className="py-1.5 px-2.5">category</td><td className="py-1.5 px-2.5">VARCHAR(50)</td><td className="py-1.5 px-2.5 font-sans text-slate-600">NOT NULL</td></tr>
+                          <tr><td className="py-1.5 px-2.5">price</td><td className="py-1.5 px-2.5">DECIMAL(10,2)</td><td className="py-1.5 px-2.5 font-sans text-slate-600">CHECK (price &gt;= 0)</td></tr>
+                          <tr><td className="py-1.5 px-2.5">sku_barcode</td><td className="py-1.5 px-2.5">VARCHAR(30)</td><td className="py-1.5 px-2.5 font-sans text-slate-600">UNIQUE, NOT NULL</td></tr>
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Table 3 Schema: DETECTIONS */}
+                    <div className="border border-indigo-200 rounded-lg overflow-hidden md:col-span-2">
+                      <div className="bg-indigo-50 px-3 py-2 font-bold text-indigo-950 border-b border-indigo-200 flex justify-between">
+                        <span>Table 3: DETECTIONS (Converted from M:N Customer ↔ Product Relationship)</span>
+                        <span className="text-[10px] font-mono text-indigo-700 bg-white px-1.5 py-0.5 rounded border border-indigo-200">Associative Foreign Key Table</span>
+                      </div>
+                      <table className="w-full text-left text-[11px]">
+                        <thead className="bg-slate-50 text-slate-500 border-b border-slate-200">
+                          <tr>
+                            <th className="py-1.5 px-2.5">Attribute</th>
+                            <th className="py-1.5 px-2.5">Data Type</th>
+                            <th className="py-1.5 px-2.5">Key / Reference</th>
+                            <th className="py-1.5 px-2.5">Sample Value</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 font-mono">
+                          <tr><td className="py-1.5 px-2.5 font-bold text-indigo-700 underline">detection_id</td><td className="py-1.5 px-2.5">VARCHAR(36)</td><td className="py-1.5 px-2.5 font-sans font-bold text-amber-700">PRIMARY KEY</td><td className="py-1.5 px-2.5">DET-1001</td></tr>
+                          <tr><td className="py-1.5 px-2.5 font-bold text-cyan-700">cu_sid</td><td className="py-1.5 px-2.5">VARCHAR(20)</td><td className="py-1.5 px-2.5 font-sans font-bold text-cyan-700">FOREIGN KEY → CUSTOMERS(cu_sid)</td><td className="py-1.5 px-2.5">HUMAN-1042</td></tr>
+                          <tr><td className="py-1.5 px-2.5 font-bold text-emerald-700">product_id</td><td className="py-1.5 px-2.5">VARCHAR(20)</td><td className="py-1.5 px-2.5 font-sans font-bold text-emerald-700">FOREIGN KEY → PRODUCTS(product_id)</td><td className="py-1.5 px-2.5">PRD-8821</td></tr>
+                          <tr><td className="py-1.5 px-2.5">camera_zone</td><td className="py-1.5 px-2.5">VARCHAR(50)</td><td className="py-1.5 px-2.5 font-sans text-slate-600">NOT NULL</td><td className="py-1.5 px-2.5">CAM-01: Produce Aisle</td></tr>
+                          <tr><td className="py-1.5 px-2.5">confidence</td><td className="py-1.5 px-2.5">DECIMAL(5,2)</td><td className="py-1.5 px-2.5 font-sans text-slate-600">NOT NULL</td><td className="py-1.5 px-2.5">99.40</td></tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : activeDbTab === 'customers' ? (
               <div className="overflow-x-auto max-h-64">
                 <table className="w-full text-left text-xs">
                   <thead className="bg-slate-100 text-slate-600 font-semibold uppercase text-[10px] tracking-wider sticky top-0 border-b border-slate-200">
